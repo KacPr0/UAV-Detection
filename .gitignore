@@ -1,0 +1,42 @@
+# Dane i wyniki (duże pliki, poza gitem)
+data/
+runs/
+outputs/
+*.pt
+*.onnx
+*.mp4
+*.mov
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.venv
+*.nosync
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+.ruff_cache/
+
+# LaTeX
+thesis/**/*.aux
+thesis/**/*.log
+thesis/**/*.out
+thesis/**/*.toc
+thesis/**/*.bbl
+thesis/**/*.blg
+thesis/**/*.bcf
+thesis/**/*.run.xml
+thesis/**/*.synctex.gz
+thesis/**/*.fdb_latexmk
+thesis/**/*.fls
+thesis/**/*.lof
+thesis/**/*.lot
+thesis/**/*.loa
+thesis/**/*.lol
+thesis/main.pdf
+
+# System
+.DS_Store
+.claude/settings.local.json
