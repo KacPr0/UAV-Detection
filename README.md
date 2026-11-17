@@ -32,3 +32,12 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 pytest
 ```
+
+## Użycie
+
+```bash
+pvdet analizuj data/hf_thermal/raw/Plot_18_50MW -o outputs/raport.html   # raport HTML z wykrytymi anomaliami
+python scripts/eval_hotspots.py data/hf_thermal/raw                      # precision/recall względem adnotacji
+```
+
+Wymaga `exiftool` (`brew install exiftool`) do odczytu temperatur z R-JPEG.

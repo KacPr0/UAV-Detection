@@ -12,6 +12,9 @@ dependencies = ["numpy", "opencv-python"]
 [project.optional-dependencies]
 dev = ["pytest"]
 
+[project.scripts]
+pvdet = "pvdet.__main__:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
