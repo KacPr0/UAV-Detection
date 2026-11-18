@@ -20,7 +20,7 @@ def thumbnail(temp: np.ndarray, spots: list[dict]) -> str:
     return base64.b64encode(cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 85])[1]).decode()
 
 
-def write(path, frames: list[dict], n_analyzed: int, delta_c: float) -> None:
+def write(path, frames: list[dict], n_analyzed: int, method: str) -> None:
     """frames: [{"name", "thumb", "spots"}] — tylko kadry z wykryciami."""
     counts = {t: sum(s["type"] == t for f in frames for s in f["spots"]) for t in COLORS}
     sections = []
@@ -39,5 +39,5 @@ section{{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;border-top:
 h2{{width:100%;font-size:1rem;margin:0}} img{{max-width:100%}} td,th{{padding:2px 8px;text-align:left}}</style>
 <h1>Raport defektów modułów PV</h1>
 <p>{datetime.now():%Y-%m-%d %H:%M} · kadrów: {n_analyzed} · z wykryciami: {len(frames)} ·
-hotspotów: {counts['hotspot']} · przegrzanych obszarów: {counts['przegrzany obszar']} · próg: {delta_c} °C nad tłem</p>
+hotspotów: {counts['hotspot']} · przegrzanych obszarów: {counts['przegrzany obszar']} · metoda: {method}</p>
 {''.join(sections)}""", encoding="utf-8")
