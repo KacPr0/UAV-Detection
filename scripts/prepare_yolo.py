@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Zbiór hf_thermal → format YOLO (obrazy z pvdet.yolo.encode + etykiety), podział według farm.
 
-Użycie: .venv/bin/python scripts/prepare_yolo.py data/hf_thermal/raw data/hf_thermal/yolo
+Użycie: .venv/bin/python scripts/prepare_yolo.py data/hf_thermal/raw data/hf_thermal/yolo [--paleta]
+--paleta: zamiast temperatur zwykły kolorowy podgląd JPG (eksperyment porównawczy).
 """
 
 import json
@@ -18,7 +19,7 @@ SPLITS = {"Plot_17_50MW": "train", "Plot_16_50MW": "val", "Plot_18_50MW": "test"
 
 
 def convert(job):
-    j, raw, out, split = job
+    j, raw, out, split, palette = job
     temp = read_temperature(j.with_suffix(".JPG"))
     h, w = temp.shape
     name = j.relative_to(raw).with_suffix("").as_posix().replace("/content/Dataset/", "/").replace("/", "__")  # nazwy DJI_XXXX powtarzają się między lotami
@@ -29,18 +30,19 @@ def convert(job):
         if x2 - x1 < 2 or y2 - y1 < 2:  # ramki 1 px to szum adnotacji
             continue
         lines.append(f"0 {(x1 + x2) / 2 / w:.6f} {(y1 + y2) / 2 / h:.6f} {(x2 - x1) / w:.6f} {(y2 - y1) / h:.6f}")
-    cv2.imwrite(str(out / "images" / split / f"{name}.png"), encode(temp))
+    img = cv2.imread(str(j.with_suffix(".JPG"))) if palette else encode(temp)
+    cv2.imwrite(str(out / "images" / split / f"{name}.png"), img)
     (out / "labels" / split / f"{name}.txt").write_text("\n".join(lines))
     return split, len(lines)
 
 
-def main(raw, out):
+def main(raw, out, palette=False):
     raw, out = Path(raw), Path(out)
     jobs = []
     for plot, split in SPLITS.items():
         (out / "images" / split).mkdir(parents=True, exist_ok=True)
         (out / "labels" / split).mkdir(parents=True, exist_ok=True)
-        jobs += [(j, raw, out, split) for j in (raw / plot).rglob("*.json") if j.with_suffix(".JPG").exists()]
+        jobs += [(j, raw, out, split, palette) for j in (raw / plot).rglob("*.json") if j.with_suffix(".JPG").exists()]
     with ThreadPoolExecutor(8) as ex:
         results = list(ex.map(convert, jobs))
     for split in SPLITS.values():
@@ -50,4 +52,4 @@ def main(raw, out):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:3])
+    main(sys.argv[1], sys.argv[2], "--paleta" in sys.argv)

@@ -10,9 +10,11 @@ import numpy as np
 COLORS = {"hotspot": (255, 255, 0), "przegrzany obszar": (0, 255, 255)}  # BGR
 
 
-def thumbnail(temp: np.ndarray, spots: list[dict]) -> str:
+def thumbnail(temp: np.ndarray, spots: list[dict], panels: list[tuple] = ()) -> str:
     lo, hi = np.percentile(temp, [1, 99.9])
     img = cv2.applyColorMap(np.clip((temp - lo) / (hi - lo) * 255, 0, 255).astype(np.uint8), cv2.COLORMAP_INFERNO)
+    for x1, y1, x2, y2 in panels:
+        cv2.rectangle(img, (x1, y1), (x2, y2), (200, 200, 200), 1)
     for n, s in enumerate(spots, 1):
         x1, y1, x2, y2 = s["bbox"]
         cv2.rectangle(img, (x1 - 3, y1 - 3), (x2 + 3, y2 + 3), COLORS[s["type"]], 1)
@@ -26,11 +28,11 @@ def write(path, frames: list[dict], n_analyzed: int, method: str) -> None:
     sections = []
     for f in frames:
         rows = "".join(
-            f"<tr><td>{n}</td><td>{s['type']}</td><td>{s['temp_c']:.1f}</td><td>+{s['delta_c']:.1f}</td>"
+            f"<tr><td>{n}</td><td>{s['type']}</td><td>{s.get('panel') or '—'}</td><td>{s['temp_c']:.1f}</td><td>+{s['delta_c']:.1f}</td>"
             f"<td>{s['bbox']}</td></tr>" for n, s in enumerate(f["spots"], 1))
         sections.append(
             f"<section><h2>{html.escape(f['name'])}</h2><img src='data:image/jpeg;base64,{f['thumb']}'>"
-            f"<table><tr><th>#</th><th>typ</th><th>maks. °C</th><th>nad tłem °C</th><th>bbox (x1, y1, x2, y2)</th></tr>"
+            f"<table><tr><th>#</th><th>typ</th><th>panel</th><th>maks. °C</th><th>nad tłem °C</th><th>bbox (x1, y1, x2, y2)</th></tr>"
             f"{rows}</table></section>")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"""<!doctype html><meta charset="utf-8"><title>Raport defektów PV</title>

@@ -18,9 +18,9 @@ def encode(temp: np.ndarray) -> np.ndarray:
     return cv2.merge([t, e, t])
 
 
-def detect(model, temp: np.ndarray, conf: float = 0.25) -> list[dict]:
-    """Ten sam format wyniku co pvdet.hotspots.detect."""
-    boxes = model.predict(encode(temp), conf=conf, verbose=False)[0].boxes
+def detect(model, temp: np.ndarray, conf: float = 0.25, image: np.ndarray | None = None) -> list[dict]:
+    """Ten sam format wyniku co pvdet.hotspots.detect. `image` zastępuje encode(temp) (np. podgląd z palety)."""
+    boxes = model.predict(encode(temp) if image is None else image, conf=conf, verbose=False)[0].boxes
     spots = []
     for (x1, y1, x2, y2), score in zip(boxes.xyxy.tolist(), boxes.conf.tolist()):
         x1, y1, x2, y2 = (int(round(v)) for v in (x1, y1, x2, y2))

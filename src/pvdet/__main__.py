@@ -1,4 +1,4 @@
-"""Użycie: pvdet analizuj FOLDER [-o raport.html] [--prog 4.0] [--model best.pt]"""
+"""Użycie: pvdet analizuj FOLDER [-o raport.html] [--prog 4.0] [--model best.pt] [--panele panele.pt]"""
 
 import argparse
 from pathlib import Path
@@ -14,6 +14,7 @@ def main():
     ap.add_argument("-o", "--out", type=Path, default=Path("raport.html"))
     ap.add_argument("--prog", type=float, default=None, help="metoda bazowa: nadwyżka nad tłem w °C (domyślnie 4); z --model: pewność (domyślnie 0,25)")
     ap.add_argument("--model", type=Path, help="wagi YOLO (best.pt); bez tej opcji — metoda bazowa")
+    ap.add_argument("--panele", type=Path, help="wagi YOLO detektora paneli — numery paneli w raporcie")
     a = ap.parse_args()
 
     if a.model:
@@ -25,6 +26,11 @@ def main():
     else:
         prog = a.prog or 4.0
         find = lambda temp: hotspots.detect(temp, delta_c=prog)
+    if a.panele:
+        from ultralytics import YOLO
+
+        from pvdet import panels
+        panel_net = YOLO(a.panele)
     images = sorted(a.folder.rglob("*_R.JPG"))
     if not images:
         ap.error(f"brak plików *_R.JPG w {a.folder}")
@@ -33,7 +39,10 @@ def main():
         temp = read_temperature(path)
         spots = find(temp)
         if spots:
-            frames.append({"name": str(path.relative_to(a.folder)), "thumb": report.thumbnail(temp, spots), "spots": spots})
+            boxes = panels.detect(panel_net, temp) if a.panele else []
+            if boxes:
+                panels.assign(spots, boxes)
+            frames.append({"name": str(path.relative_to(a.folder)), "thumb": report.thumbnail(temp, spots, boxes), "spots": spots})
         print(f"\r{n}/{len(images)}", end="", flush=True)
     report.write(a.out, frames, len(images), f"model {a.model.name}, conf {prog}" if a.model else f"{prog} °C nad tłem")
     print(f"\nRaport: {a.out.resolve()}")
